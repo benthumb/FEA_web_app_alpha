@@ -1,17 +1,17 @@
-class Person
-  # Setters getters / creational / constructive
+require "~/Documents/sinatra_apps/kua/lib/FEA_alpha/Kua.rb"
 
-  attr_reader :name, :birthdate, :birthplace, :gender
-  def initialize(name, birthdate, birthplace, gender)
-    @name = name
-    @birthdate = birthdate
-    @birthplace = birthplace
-    @gender = gender
+class Person
+  @profile # is this necessary : isn't it implicitly lodged here?
+  include Kua
+  attr_reader :profile
+
+  def set_profile(profile)
+    @profile = profile
+    self.kua_init(@profile.birthdate, @profile.gender)
   end
 end
 
 class LoveInterest < Person
-
   attr_accessor :compatibility_score
   def is_compatible
     if compatibility_score >= 70

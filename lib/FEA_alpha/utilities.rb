@@ -1,4 +1,5 @@
 require "~/Documents/sinatra_apps/kua/lib/FEA_alpha/Logging.rb"
+require 'date'
 
 module Utilities
 
@@ -11,10 +12,10 @@ module Utilities
     cnt = 0
 
     if b_day[century] == "1"
-      f1 = File.open('/home/benthumb/Documents/sinatra_apps/kua/lib/FEA_alpha/data/output.txt','r')
+      f1 = File.open('./data/output.txt','r')
     else
       logger.debug "else clause of b_day test..."
-      f1 = File.open('/home/benthumb/Documents/sinatra_apps/kua/lib/FEA_alpha/data/output2001.txt','r')
+      f1 = File.open('./data/output2001.txt','r')
     end
 
     while line = f1.gets
@@ -50,6 +51,102 @@ module Utilities
       number = two_digits[0].to_i + two_digits[1].to_i
       self.to_single_digit(number)
     end
+  end
+
+  # New algo implementation : will phase out <calendar_yr_calc_beta>
+  def dates_to_compare(dates_hash, date_to_compare)
+  # Basic algo: if birthdate < new moon date OR earliest possible new year's, 
+  #   then birth year goes to prior year
+  # Otherwise : if birthdate > new moon date, then
+  # 1) estimate/calculate date of new year's celebration
+  # 2) compare birthdate against above : < NYC date, goes to prior year; otherwise, goest to current year
+	  
+    year = date_to_compare.to_s[4..7]
+
+    month = date_to_compare.to_s[0] != "0" ? date_to_compare.to_s[0..1] : date_to_compare.to_s[1] 
+
+    day = date_to_compare.to_s[2] != "0" ? date_to_compare.to_s[2..3] : date_to_compare.to_s[3] 
+   
+    logger.debug "---------------- date_to_compare (year): " << year 
+    logger.debug "---------------- date_to_compare (month): " << month 
+    logger.debug "---------------- date_to_compare (day): " << day 
+
+    b_date = date_to_compare 
+
+    yr_idx_end = b_date.length-1
+    yr_idx_strt = yr_idx_end-3
+    
+    b_year = date_to_compare[yr_idx_strt..yr_idx_end]
+
+    date_new_moon = dates_hash[b_year]
+
+    new_moon_date_arr = date_new_moon.split(" ");
+
+    new_moon_month = new_moon_date_arr[0] == "Jan" ? "01":"02"
+
+    new_moon_day = new_moon_date_arr[1]
+
+    parsed_date_object_compare = Date.new(year.to_i, month.to_i, day.to_i)
+
+    # ----------- Date of new moon
+    parsed_date_object_new_moon =  Date.new(b_year.to_i,new_moon_month.to_i,new_moon_day.to_i)
+
+    ny_date_calculated = new_years_day(parsed_date_object_new_moon)
+
+    if(parsed_date_object_compare < ny_date_calculated)    
+      prior_year = "" << (date_to_compare[4..7].to_i - 1).to_s
+    else
+      same_year = date_to_compare[4..7]
+    end
+  end
+
+  def new_years_day(new_moon_date)
+    # month, i.e., February or 2/21/YIQ (latest possible date) 
+    latest_ny_month = 2         
+
+    calculated_new_years_day = 0  # calculated new years day 
+    yiq = new_moon_date.year      # year in question
+
+    # month, i.e., 1/21/YIQ (earliest possible date) 
+    earliest_ny_month = 1         
+
+    # day, i.e., 1/21/YIQ (earliest possible date) 
+    earliest_latest_ny_day = 21   
+
+    # earliest possible new year's day/date 
+    earliest_ny_date = Date.new(yiq, 
+				earliest_ny_month, 
+				earliest_latest_ny_day) 
+
+    # latest possible new year's day/date 
+    latest_ny_date = Date.new(yiq, 
+				latest_ny_month, 
+				earliest_latest_ny_day) 
+
+    # advance date : new moon date < earliest possible new year's
+    thirty_days = 30           
+
+    # rollover point : earliest possible + 30 days
+    last_day_jan = 31          
+
+    # the DAY in date of New Year's  
+    day_candidate = (new_moon_date.day + thirty_days) % last_day_jan
+    ny_day = day_candidate != 0 ? day_candidate : 31  
+
+    # the MONTH in date of New Year's  
+    ny_month = day_candidate == 0 ? earliest_ny_month : latest_ny_month
+
+    # Is New Moon < (earlier) than Jan 21 YIQ : Date.new(YIQ,JAN,EARLIEST_DAY)
+
+    # Does the date of the new moon fall before Jan, 21 YIQ 
+    if new_moon_date < earliest_ny_date
+      calculated_new_years_day = Date.new(yiq, ny_month, ny_day) 
+    else
+      calculated_new_years_day = new_moon_date
+    # - - - - - - - - - - - - - - - - PROBABLY DON'T NEED, BUT NOT SURE
+    # (earliest_ny_date..latest_ny_date).to_a.include? new_moon_date
+    # - - - - - - - - - - - - - - - - 
+    end  
   end
 end
 

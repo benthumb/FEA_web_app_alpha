@@ -1,0 +1,5 @@
+to run use -o 0.0.0.0 option : in other words,
+
+ruby kua.rb -o 0.0.0.0
+
+URL is http://192.168.137.126:4567/

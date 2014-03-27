@@ -17,13 +17,15 @@ post '/' do
 
   b_date = month + date + year
 
-  psn = Person.new(name,b_date,location,gender)
-  prof = Kua.new(psn)
+  psn_profile = Profile.new(name,b_date,location,gender)
+  psn = Person.new()
+  psn.set_profile psn_profile
 
-  funk = prof.kua_number
-  flex = prof.group
-  hot97_a = "User's Kua number is: " + funk
-  hot97_b = "User's group is: " + flex
+  funk = psn.kua_number
+  flex = psn.kua_group
+  user_name = psn.profile.name
+  hot97_a = "#{user_name}'s Kua number is: #{funk}"
+  hot97_b = "#{user_name}'s group is: #{flex}"
   @angiem = hot97_a + "<br>" + hot97_b 
 
   erb "<%= @angiem %>" 
